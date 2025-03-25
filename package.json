@@ -1,0 +1,35 @@
+{
+  "name": "lofi-chords-generator",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@magenta/music": "^1.23.1",
+    "@vueuse/core": "^13.0.0",
+    "buffer": "^6.0.3",
+    "openai": "^4.89.0",
+    "path-browserify": "^1.0.1",
+    "pinia": "^3.0.1",
+    "process": "^0.11.10",
+    "rollup-plugin-polyfill-node": "^0.13.0",
+    "stream-browserify": "^3.0.0",
+    "tone": "^15.0.4",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss7-compat": "^2.2.17",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^3.4.17",
+    "vite": "^6.2.1",
+    "vite-plugin-vue-devtools": "^7.7.2"
+  },
+  "packageManager": "yarn@1.22.19+sha1.4ba7fc5c6e704fce2066ecbfb0b0d8976fe62447"
+}
