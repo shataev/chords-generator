@@ -31,16 +31,8 @@ const generateChords = async () => {
         genre: genre.value
       })
       
-      // Преобразуем ответ сервера в формат для отображения
-      const chords = response.chords.map((chord, index) => ({
-        name: chord.name,
-        notes: response.midi
-          .filter((_, i) => Math.floor(i / 4) === index) // Группируем ноты по 4 для каждого аккорда
-          .map(n => n.note)
-      }))
-      
-      generatedChords.value = chords
-      generatedProgressions.value = [chords] // Оборачиваем в массив для совместимости с UI
+      generatedChords.value = response.chords
+      generatedProgressions.value = [response.chords] // Оборачиваем в массив для совместимости с UI
       bpm.value = response.bpm // Обновляем BPM из ответа сервера
     } catch (error) {
       console.error('Failed to generate chords:', error)
@@ -48,11 +40,7 @@ const generateChords = async () => {
 }
 
 const playChordAtTime = (chord, time, duration) => {
-  const notes = chord.notes
-  const velocities = [0.8, 0.7, 0.7, 0.6, 0.5] // Соответствует velocity из сервера
-  notes.forEach((note, index) => {
-    synth.triggerAttackRelease(note, duration, time, velocities[index] || 0.5)
-  })
+  synth.triggerAttackRelease(chord.notes, duration, time, 0.8)
 }
 
 const stopPlayback = () => {
@@ -78,20 +66,21 @@ const playProgression = async () => {
     Tone.Transport.stop()
     Tone.Transport.bpm.value = bpm.value
 
-    // Schedule all chords
-    generatedChords.value.forEach((chord, index) => {
-      // Schedule the chord playback
-      Tone.Transport.schedule(time => {
-        playChordAtTime(chord, time, (60 / bpm.value) * 2)
-      }, index * (60 / bpm.value) * 2)
+    // Создаем Part для воспроизведения аккордов
+    const part = new Tone.Part((time, chord) => {
+      playChordAtTime(chord, time, (60 / bpm.value) * 2)
+    }, generatedChords.value.map((chord, index) => [index * (60 / bpm.value) * 2, chord]))
 
-      // Schedule the UI update slightly before the chord plays
-      Tone.Transport.schedule(() => {
-        currentPlayingIndex.value = index
-      }, index * (60 / bpm.value) * 2 - 0.01)
-    })
+    // Добавляем обновление UI
+    const uiPart = new Tone.Part((time, index) => {
+      currentPlayingIndex.value = index
+    }, generatedChords.value.map((_, index) => [index * (60 / bpm.value) * 2 - 0.01, index]))
 
-    // Schedule the end of playback
+    // Запускаем воспроизведение
+    part.start(0)
+    uiPart.start(0)
+
+    // Останавливаем воспроизведение в конце
     const endTime = generatedChords.value.length * (60 / bpm.value) * 2
     Tone.Transport.schedule(() => {
       isPlaying.value = false
@@ -219,10 +208,7 @@ const removeChord = (index: number) => {
                         {{ generatedChords[(row - 1) * 4 + (i - 1)].name }}
                       </div>
                       <div class="text-xs sm:text-sm text-warm-orange/80 handwritten-font">
-                        <div 
-                          v-for="note in generatedChords[(row - 1) * 4 + (i - 1)].notes" 
-                          :key="note"
-                        >
+                        <div v-for="note in generatedChords[(row - 1) * 4 + (i - 1)].notes" :key="note">
                           {{ note }}
                         </div>
                       </div>
